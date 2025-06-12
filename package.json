@@ -1,0 +1,28 @@
+{
+  "name": "monolith-app",
+  "version": "1.0.0",
+  "scripts": {
+    "format": "npx prettier . --write",
+    "lint": "eslint '*.ts' --quiet --fix",
+    "compile": "tsc",
+    "validate": "sam validate --lint",
+    "build": "sam build",
+    "deploy": "sam deploy --config-env 'dev'",
+    "sync": "sam sync --stack-name event-driven",
+    "deploy-test": "sam deploy --config-env 'test'",
+    "deploy-prod": "sam deploy --config-env 'prod'"
+  },
+  "author": "srwilliamg@gmail.com",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {},
+  "devDependencies": {
+    "eslint": "^9.28.0",
+    "@eslint/js": "^9.28.0",
+    "@types/node": "^22.15.30",
+    "esbuild": "0.25.5",
+    "globals": "^16.2.0",
+    "prettier": "3.5.3",
+    "typescript-eslint": "^8.34.0"
+  }
+}
