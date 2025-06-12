@@ -1,0 +1,89 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: SAM template for EC2 instance with Node.js endpoint
+
+Resources:
+  MonolithAppBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${AWS::AccountId}-monolith-app"
+      Tags:
+        - Key: Name
+          Value: MonolithAppBucket
+
+  ECSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP traffic
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      # Tags:
+      #   - Key: Name
+      #     Value: ECSecurityGroup
+
+  EC2InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: S3ReadAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource:
+                  - !Sub "arn:aws:s3:::${MonolithAppBucket}/*"
+
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref EC2InstanceRole
+
+  MonolithAppInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-09e6f87a47903347c
+      SecurityGroupIds:
+        - !GetAtt ECSecurityGroup.Id
+      IamInstanceProfile: !Ref EC2InstanceProfile
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          export APP_BUCKET=!Ref MonolithAppBucket
+          export STACK_NAME=${AWS::StackName}
+          export AWS_REGION=${AWS::Region}
+          for i in {1..5}; do
+            aws s3 cp s3://${MonolithAppBucket}/run.sh /tmp/run.sh && break
+            sleep 5
+          done
+          if [ -f /tmp/run.sh ]; then
+            chmod +x /tmp/run.sh
+            /tmp/run.sh
+            rm /tmp/run.sh
+          else
+            /opt/aws/bin/cfn-signal -e 1 --stack $STACK_NAME --resource MonolithAppInstance --region $AWS_REGION
+          fi
+
+Outputs:
+  InstancePublicIp:
+    Description: Public IP of the EC2 instance
+    Value: !GetAtt MonolithAppInstance.PublicIp
+  EndpointUrl:
+    Description: URL for the Hello World endpoint
+    Value: !Sub "http://${MonolithAppInstance.PublicIp}/hello"
+  AppBucketName:
+    Description: Name of the S3 bucket for application files
+    Value: !Ref MonolithAppBucket

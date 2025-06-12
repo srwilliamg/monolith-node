@@ -1,0 +1,18 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+    commands:
+      - npm install -g aws-sam-cli
+  build:
+    commands:
+      - sam build
+      - aws s3 cp server.js s3://${APP_BUCKET}/server.js
+      - sam package --output-template-file packaged.yaml --s3-bucket ${ARTIFACT_BUCKET}
+  post_build:
+    commands:
+      - echo Build completed
+artifacts:
+  files:
+    - packaged.yaml
