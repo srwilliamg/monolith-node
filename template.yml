@@ -3,14 +3,6 @@ Transform: AWS::Serverless-2016-10-31
 Description: SAM template for EC2 instance with Node.js endpoint
 
 Resources:
-  MonolithAppBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Sub "${AWS::AccountId}-monolith-app"
-      Tags:
-        - Key: Name
-          Value: MonolithAppBucket
-
   ECSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -43,7 +35,7 @@ Resources:
                 Action:
                   - s3:GetObject
                 Resource:
-                  - !Sub "arn:aws:s3:::${MonolithAppBucket}/*"
+                  - !Sub "arn:aws:s3:::${AWS::AccountId}-monolith-app/*"
 
   EC2InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -62,11 +54,11 @@ Resources:
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
-          export APP_BUCKET=!Ref MonolithAppBucket
-          export STACK_NAME=${AWS::StackName}
-          export AWS_REGION=${AWS::Region}
+          export ACCOUNT_ID="${AWS::AccountId}"
+          export STACK_NAME="${AWS::StackName}"
+          export AWS_REGION="${AWS::Region}"
           for i in {1..5}; do
-            aws s3 cp s3://${MonolithAppBucket}/run.sh /tmp/run.sh && break
+            aws s3 cp s3://${AWS::AccountId}-monolith-app/run.sh /tmp/run.sh && break
             sleep 5
           done
           if [ -f /tmp/run.sh ]; then
@@ -84,6 +76,3 @@ Outputs:
   EndpointUrl:
     Description: URL for the Hello World endpoint
     Value: !Sub "http://${MonolithAppInstance.PublicIp}/hello"
-  AppBucketName:
-    Description: Name of the S3 bucket for application files
-    Value: !Ref MonolithAppBucket

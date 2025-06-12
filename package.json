@@ -8,9 +8,7 @@
     "validate": "sam validate --lint",
     "build": "sam build",
     "deploy": "sam deploy --config-env 'dev'",
-    "sync": "sam sync --stack-name event-driven",
-    "deploy-test": "sam deploy --config-env 'test'",
-    "deploy-prod": "sam deploy --config-env 'prod'"
+    "sync": "sam sync --stack-name monolith-app"
   },
   "author": "srwilliamg@gmail.com",
   "license": "ISC",

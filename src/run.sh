@@ -5,7 +5,7 @@ yum install -y nodejs
 mkdir -p /home/ec2-user/app
 
 for i in {1..5}; do
-    aws s3 cp s3://$APP_BUCKET/server.js /home/ec2-user/app/server.js && break
+    aws s3 cp s3://$ACCOUNT_ID-monolith-app/server.js /home/ec2-user/app/server.js && break
     sleep 5
 done
 if [ -f /home/ec2-user/app/server.js ]; then
