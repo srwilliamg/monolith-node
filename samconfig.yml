@@ -6,6 +6,6 @@ dev:
       s3_prefix: monolith-app
       region: us-east-1
       capabilities: CAPABILITY_IAM
-      disable_rollback: true
+      disable_rollback: false
       image_repositories: []
 version: 0.1

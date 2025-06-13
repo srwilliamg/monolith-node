@@ -12,6 +12,11 @@ Resources:
           FromPort: 80
           ToPort: 80
           CidrIp: 0.0.0.0/0
+        - Description: "SSH from my IP"
+          IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
       # Tags:
       #   - Key: Name
       #     Value: ECSecurityGroup
@@ -51,14 +56,22 @@ Resources:
       SecurityGroupIds:
         - !GetAtt ECSecurityGroup.Id
       IamInstanceProfile: !Ref EC2InstanceProfile
+      KeyName: monolith-key
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
+          exec > /var/log/userdata.log 2>&1
+          set -x
+          echo "UserData started at $(date)"
+          yum update -y
           export ACCOUNT_ID="${AWS::AccountId}"
           export STACK_NAME="${AWS::StackName}"
           export AWS_REGION="${AWS::Region}"
+          echo "export ACCOUNT_ID=${AWS::AccountId}" >> /home/ec2-user/.bashrc
+          echo "export STACK_NAME=${AWS::StackName}" >> /home/ec2-user/.bashrc
+          echo "export AWS_REGION=${AWS::Region}" >> /home/ec2-user/.bashrc
           for i in {1..5}; do
-            aws s3 cp s3://${AWS::AccountId}-monolith-app/run.sh /tmp/run.sh && break
+            aws s3 cp s3://$ACCOUNT_ID-monolith-app/run.sh /tmp/run.sh && break
             sleep 5
           done
           if [ -f /tmp/run.sh ]; then

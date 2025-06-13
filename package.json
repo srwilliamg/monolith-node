@@ -7,7 +7,7 @@
     "compile": "tsc",
     "validate": "sam validate --lint",
     "build": "sam build",
-    "deploy": "sam deploy --config-env 'dev'",
+    "deploy": "sam build && sam deploy --config-env 'dev'",
     "sync": "sam sync --stack-name monolith-app"
   },
   "author": "srwilliamg@gmail.com",
